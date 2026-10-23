@@ -25,6 +25,14 @@ const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touch
 async function tapAt(x, y) { await touch('touchStart', x, y); await sleep(60); await touch('touchEnd', x, y); await sleep(120); }
 
 try {
+  // regression: opening dist/index.html straight from disk must not leave a blank page
+  if (fs.existsSync(new globalThis.URL('../dist/index.html', import.meta.url).pathname)) {
+    const fp = await ctx.newPage();
+    await fp.goto(new globalThis.URL('../dist/index.html', import.meta.url).href);
+    await fp.waitForTimeout(1500);
+    check('dist/index.html works from file:// (no blank page)', await fp.$('.title-name'));
+    await fp.close();
+  }
   await page.goto(URL);
   await sleep(1200);
   await page.evaluate(() => localStorage.clear());

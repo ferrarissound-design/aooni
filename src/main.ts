@@ -5,6 +5,8 @@ import { GameScene } from './game/GameScene';
 import { TitleScene } from './game/TitleScene';
 import './style.css';
 
+document.getElementById('boot')?.remove();
+
 const DPR = Math.min(2, window.devicePixelRatio || 1);
 const size = () => ({ w: Math.max(320, Math.floor(window.innerWidth * DPR)), h: Math.max(240, Math.floor(window.innerHeight * DPR)) });
 const s0 = size();
