@@ -1,0 +1,20 @@
+{
+  "name": "karasuba-mansion",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "test:e2e": "node tests/playtest.mjs"
+  },
+  "dependencies": {
+    "phaser": "3.80.1"
+  },
+  "devDependencies": {
+    "playwright-core": "1.48.2",
+    "typescript": "5.6.3",
+    "vite": "5.4.10"
+  }
+}
