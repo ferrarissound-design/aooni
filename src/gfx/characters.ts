@@ -4,89 +4,155 @@ import { makeCanvas, outline, P, shade } from './pixel';
 export const DIRS: Dir[] = ['down', 'left', 'right', 'up'];
 
 interface HumanPal {
-  hair: string; skin: string; shirt: string; shirt2: string; pants: string; shoe: string; eye: string;
-  long?: boolean; scarf?: string; skirt?: boolean;
+  hair: string; hairHi: string; hairLo: string;
+  skin: string; skinSh: string;
+  top: string; topHi: string; topLo: string; inner: string;
+  bottom: string; bottomLo: string;
+  shoe: string; shoeLo: string;
+  eye: string;
+  girl?: boolean;
+  accent?: string; accentLo?: string;
 }
 
 export const PLAYER_PAL: HumanPal = {
-  hair: '#1c1612', skin: '#dcb08e', shirt: '#c9c9cf', shirt2: '#2a2e44', pants: '#22232c', shoe: '#120e0c', eye: '#140c0a',
+  hair: '#2b2521', hairHi: '#54483f', hairLo: '#15110f',
+  skin: '#e9c09d', skinSh: '#c39574',
+  top: '#5d83ad', topHi: '#86abd2', topLo: '#3b5776', inner: '#e8e4dc',
+  bottom: '#343a4e', bottomLo: '#212536',
+  shoe: '#dcd8d0', shoeLo: '#8c887f',
+  eye: '#161012',
 };
 export const SAKI_PAL: HumanPal = {
-  hair: '#3a2014', skin: '#e0b898', shirt: '#d0ccc8', shirt2: '#26304a', pants: '#26304a', shoe: '#2a1810', eye: '#140c0a',
-  long: true, scarf: '#a02428', skirt: true,
+  hair: '#5c3825', hairHi: '#85563a', hairLo: '#38200f',
+  skin: '#f2cbab', skinSh: '#cfa282',
+  top: '#ece8e2', topHi: '#ffffff', topLo: '#bcb7ae', inner: '#ece8e2',
+  bottom: '#34446c', bottomLo: '#222e4d',
+  shoe: '#4d2e20', shoeLo: '#2c1a11',
+  eye: '#1a0f0f',
+  girl: true, accent: '#cc343c', accentLo: '#8e1f27',
 };
 
-/** 16x24 human frame. frame: 0 stand, 1 step A, 2 step B */
+/** 16x24 human frame. frame: 0 stand, 1 step A, 2 step B (contact poses swing legs and arms). */
 function drawHuman(p: P, dir: Dir, frame: number, c: HumanPal) {
-  const step = frame === 0 ? 0 : frame === 1 ? 1 : -1;
-  const bob = frame === 0 ? 0 : 1;
-  const y0 = bob ? 1 : 0;
-  const skinD = shade(c.skin, -0.18);
+  const st = frame === 0 ? 0 : frame === 1 ? 1 : -1; // which leg leads
+  const dy = frame === 0 ? 0 : 1; // body drops slightly on contact frames
+  const girl = !!c.girl;
+
   if (dir === 'down' || dir === 'up') {
-    // legs
-    const lA = step === 1 ? 1 : 0, lB = step === -1 ? 1 : 0;
-    if (c.skirt) {
-      p.r(4, 16 + y0, 8, 3, c.pants); p.h(4, 18 + y0, 8, shade(c.pants, -0.3));
-      p.r(5, 19 + y0, 2, 3 - lA, c.skin); p.r(9, 19 + y0, 2, 3 - lB, c.skin);
+    const front = dir === 'down';
+    // ---- legs
+    const lLift = st === -1 ? 1 : 0, rLift = st === 1 ? 1 : 0;
+    const legTop = (girl ? 19 : 17) + dy;
+    const legCol = girl ? c.skin : c.bottom;
+    const legLo = girl ? c.skinSh : c.bottomLo;
+    p.r(5, legTop, 3, 22 - legTop - lLift, legCol); p.r(8, legTop, 3, 22 - legTop - rLift, legCol);
+    p.v(7, legTop, 22 - legTop - lLift, legLo); p.v(8, legTop, 22 - legTop - rLift, legLo);
+    if (girl) { p.r(5, 21 - lLift, 3, 1, '#eeeae6'); p.r(8, 21 - rLift, 3, 1, '#eeeae6'); }
+    // shoes
+    p.r(4, 22 - lLift, 4, 2, c.shoe); p.h(4, 23 - lLift, 4, c.shoeLo); p.p(4, 22 - lLift, c.shoeLo);
+    p.r(8, 22 - rLift, 4, 2, c.shoe); p.h(8, 23 - rLift, 4, c.shoeLo); p.p(11, 22 - rLift, c.shoeLo);
+    // ---- torso
+    const ty = 10 + dy;
+    p.r(4, ty, 8, 7, c.top);
+    p.v(4, ty, 7, c.topHi); p.v(11, ty, 7, c.topLo); p.h(4, ty + 6, 8, c.topLo);
+    if (girl) {
+      // pleated skirt
+      p.r(3, 16 + dy, 10, 3, c.bottom); p.h(3, 18 + dy, 10, c.bottomLo);
+      for (const x of [5, 7, 9, 11]) p.v(x, 16 + dy, 3, c.bottomLo);
+      p.h(4, 16 + dy, 8, c.bottomLo);
     } else {
-      p.r(5, 17 + y0, 2, 5 - lA, c.pants); p.r(9, 17 + y0, 2, 5 - lB, c.pants);
+      p.h(4, 16 + dy, 8, c.bottomLo); // belt line
     }
-    p.r(5, 22 - lA, 2, 1, c.shoe); p.r(9, 22 - lB, 2, 1, c.shoe);
-    p.r(4, 22 - lA, 1, 1, c.shoe); p.r(11, 22 - lB, 1, 1, c.shoe);
-    // torso
-    p.r(4, 10 + y0, 8, 7, c.shirt);
-    p.h(4, 16 + y0, 8, shade(c.shirt, -0.25));
-    if (dir === 'down') { p.v(7, 11 + y0, 4, shade(c.shirt, -0.15)); p.r(7, 10 + y0, 2, 2, c.shirt2); }
-    // arms swing opposite to legs
-    const aL = step === -1 ? 1 : 0, aR = step === 1 ? 1 : 0;
-    p.r(2, 10 + y0 + aL, 2, 6, c.shirt); p.r(12, 10 + y0 + aR, 2, 6, c.shirt);
-    p.r(2, 16 + y0 + aL, 2, 1, c.skin); p.r(12, 16 + y0 + aR, 2, 1, c.skin);
-    if (c.scarf) { p.r(4, 10 + y0, 8, 2, c.scarf); if (dir === 'down') p.r(8, 12 + y0, 2, 3, c.scarf); }
-    // head
-    p.r(4, 2 + y0, 8, 8, c.skin);
-    p.h(4, 9 + y0, 8, skinD);
-    p.r(3, 1 + y0, 10, 3, c.hair);
-    p.r(3, 3 + y0, 1, 5, c.hair); p.r(12, 3 + y0, 1, 5, c.hair);
-    if (dir === 'down') {
-      p.r(4, 4 + y0, 3, 1, c.hair); p.r(9, 4 + y0, 2, 1, c.hair);
-      p.p(6, 6 + y0, c.eye); p.p(9, 6 + y0, c.eye);
-      p.p(6, 7 + y0, shade(c.skin, -0.05)); p.p(9, 7 + y0, shade(c.skin, -0.05));
-      if (c.long) { p.r(3, 8 + y0, 1, 4, c.hair); p.r(12, 8 + y0, 1, 4, c.hair); }
+    if (front) {
+      if (girl) {
+        p.r(6, ty, 4, 2, c.inner); // sailor collar flap
+        p.r(4, ty, 8, 1, c.accent!); p.r(7, ty + 1, 2, 4, c.accent!); p.p(7, ty + 4, c.accentLo!); p.p(8, ty + 5, c.accentLo!);
+      } else {
+        p.r(7, ty, 2, 1, c.skinSh); // neck
+        p.r(6, ty + 1, 4, 2, c.inner); p.p(7, ty + 3, c.inner); p.p(8, ty + 3, c.inner);
+        p.p(6, ty, c.topHi); p.p(9, ty, c.topHi); // collar
+        p.v(7, ty + 4, 3, c.topLo); // zipper
+      }
     } else {
-      p.r(3, 1 + y0, 10, 8, c.hair);
-      p.h(4, 8 + y0, 8, shade(c.hair, 0.12));
-      if (c.long) { p.r(6, 9 + y0, 4, 4, c.hair); p.r(7, 2 + y0, 2, 1, c.scarf ?? c.hair); }
+      if (girl) { p.r(4, ty, 8, 2, c.accent!); p.p(7, ty + 2, c.accentLo!); }
+      else { p.r(5, ty - 1, 6, 3, c.topHi); p.h(5, ty + 2, 6, c.topLo); } // hood bunched at the nape
     }
-    p.h(4, 1 + y0, 8, shade(c.hair, 0.15));
+    // ---- arms (swing opposite to the legs), with hands
+    const aL = st === 1 ? -1 : st === -1 ? 1 : 0, aR = -aL;
+    p.r(2, ty + 1 + aL, 2, 5, c.top); p.v(2, ty + 1 + aL, 5, c.topHi); p.h(2, ty + 5 + aL, 2, c.topLo);
+    p.r(12, ty + 1 + aR, 2, 5, c.top); p.v(13, ty + 1 + aR, 5, c.topLo);
+    p.r(2, ty + 6 + aL, 2, 2, c.skin); p.r(12, ty + 6 + aR, 2, 2, c.skin); p.h(2, ty + 7 + aL, 2, c.skinSh); p.h(12, ty + 7 + aR, 2, c.skinSh);
+    // ---- head
+    const hy = 1 + dy;
+    p.r(4, hy + 1, 8, 8, c.skin);
+    p.r(5, hy + 9, 6, 1, c.skin);
+    p.h(4, hy + 8, 8, c.skinSh); p.h(5, hy + 9, 6, c.skinSh);
+    if (front) {
+      p.r(4, hy, 8, 1, c.hairLo); p.r(3, hy + 1, 10, 3, c.hair); p.r(4, hy, 8, 1, c.hair);
+      p.h(5, hy, 4, c.hairHi); p.h(4, hy + 1, 3, c.hairHi);
+      p.v(3, hy + 4, 4, c.hair); p.v(12, hy + 4, 4, c.hairLo);
+      // fringe
+      for (const x of [4, 6, 7, 9, 11]) p.p(x, hy + 4, c.hair);
+      p.p(5, hy + 4, c.hairLo); p.p(10, hy + 4, c.hairLo);
+      // eyes
+      p.r(5, hy + 5, 2, 2, '#f4f0ea'); p.r(9, hy + 5, 2, 2, '#f4f0ea');
+      p.r(5, hy + 5, 1, 2, c.eye); p.r(10, hy + 5, 1, 2, c.eye);
+      p.p(6, hy + 5, c.eye); p.p(9, hy + 5, c.eye);
+      if (girl) { p.p(5, hy + 4, c.eye); p.p(10, hy + 4, c.eye); p.p(4, hy + 7, '#f0a89a'); p.p(11, hy + 7, '#f0a89a'); }
+      p.p(7, hy + 7, c.skinSh); p.h(7, hy + 8, 2, '#a85e58');
+      if (girl) {
+        p.v(3, hy + 7, 4, c.hair); p.v(12, hy + 7, 4, c.hairLo); // long locks beside the neck
+        p.r(11, hy + 1, 2, 2, c.accent!); p.p(11, hy + 1, c.accentLo!); // hair clip
+      }
+    } else {
+      p.r(3, hy, 10, 9, c.hair); p.r(4, hy - 0, 8, 1, c.hairHi);
+      p.r(3, hy + 8, 10, 1, c.hairLo); p.r(5, hy + 9, 6, 1, c.hairLo);
+      p.h(5, hy + 2, 3, c.hairHi); p.v(8, hy + 3, 5, c.hairLo); p.h(4, hy + 6, 3, c.hairLo);
+      if (girl) {
+        p.r(4, hy + 9, 8, 4, c.hair); p.v(7, hy + 9, 4, c.hairLo); p.v(4, hy + 9, 4, c.hairHi);
+        p.r(7, hy + 1, 2, 2, c.accent!);
+      }
+    }
   } else {
-    const flip = dir === 'left';
-    const X = (x: number) => (flip ? 15 - x : x);
+    // ---- side view (drawn facing right, mirrored for left)
     const R = (x: number, y: number, w: number, h: number, col: string) => {
-      if (flip) p.r(16 - x - w, y, w, h, col); else p.r(x, y, w, h, col);
+      if (dir === 'left') p.r(16 - x - w, y, w, h, col); else p.r(x, y, w, h, col);
     };
-    // legs
-    const fwd = step;
-    if (c.skirt) {
-      R(5, 16 + y0, 7, 3, c.pants);
-      R(6 + fwd, 19 + y0, 2, 3, c.skin); R(8 - fwd, 19 + y0, 2, 3, shade(c.skin, -0.15));
-    } else {
-      R(6 + fwd, 17 + y0, 2, 5, c.pants); R(8 - fwd, 17 + y0, 2, 5, shade(c.pants, -0.2));
-    }
-    R(6 + fwd, 22, 3, 1, c.shoe); R(8 - fwd, 22, 3, 1, c.shoe);
+    const X = (x: number) => (dir === 'left' ? 15 - x : x);
+    const sw = st; // leading leg offset
+    const legTop = (girl ? 19 : 17) + dy;
+    const legCol = girl ? c.skin : c.bottom;
+    const legLo = girl ? c.skinSh : c.bottomLo;
+    // far leg (darker), then near leg
+    const farX = 7 - sw * 2, nearX = 7 + sw * 2;
+    R(farX, legTop, 3, 22 - legTop - (sw === 1 ? 1 : 0), legLo);
+    R(farX - 1, 22 - (sw === 1 ? 1 : 0), 5, 2, c.shoeLo); R(farX + 1, 22 - (sw === 1 ? 1 : 0), 3, 1, c.shoe);
+    R(nearX, legTop, 3, 22 - legTop - (sw === -1 ? 1 : 0), legCol);
+    R(nearX - 1, 22 - (sw === -1 ? 1 : 0), 5, 2, c.shoe); R(nearX - 1, 23 - (sw === -1 ? 1 : 0), 5, 1, c.shoeLo);
+    if (girl) R(nearX, 21 - (sw === -1 ? 1 : 0), 3, 1, '#eeeae6');
     // torso
-    R(5, 10 + y0, 6, 7, c.shirt); R(5, 16 + y0, 6, 1, shade(c.shirt, -0.25));
-    if (c.scarf) R(5, 10 + y0, 6, 2, c.scarf);
-    // arm
-    R(7 - fwd, 11 + y0, 2, 5, shade(c.shirt, -0.1)); R(7 - fwd, 16 + y0, 2, 1, c.skin);
+    const ty = 10 + dy;
+    R(5, ty, 6, 7, c.top); R(5, ty, 1, 7, c.topLo); R(10, ty, 1, 7, c.topHi); R(5, ty + 6, 6, 1, c.topLo);
+    if (girl) { R(4, 16 + dy, 8, 3, c.bottom); R(4, 18 + dy, 8, 1, c.bottomLo); R(5, ty, 6, 2, c.accent!); R(9, ty + 2, 2, 3, c.accent!); }
+    else { R(5, 16 + dy, 6, 1, c.bottomLo); R(8, ty, 3, 2, c.inner); }
+    // arm swings front/back
+    const ax = 7 + (st === 1 ? 2 : st === -1 ? -2 : 0);
+    R(ax, ty + 1, 3, 5, c.top); R(ax, ty + 1, 1, 5, c.topHi); R(ax, ty + 5, 3, 1, c.topLo);
+    R(ax, ty + 6, 3, 2, c.skin); R(ax, ty + 7, 3, 1, c.skinSh);
     // head
-    R(4, 2 + y0, 8, 8, c.skin);
-    R(4, 9 + y0, 8, 1, skinD);
-    R(3, 1 + y0, 9, 3, c.hair);
-    R(3, 3 + y0, 4, 6, c.hair);
-    R(11, 4 + y0, 1, 1, c.hair);
-    p.p(X(9), 6 + y0, c.eye);
-    p.p(X(12), 7 + y0, c.skin);
-    if (c.long) { R(2, 5 + y0, 3, 7, c.hair); R(1, 8 + y0, 2, 3, c.hair); }
+    const hy = 1 + dy;
+    R(4, hy + 1, 8, 8, c.skin); R(5, hy + 9, 5, 1, c.skin); R(4, hy + 8, 8, 1, c.skinSh); R(5, hy + 9, 5, 1, c.skinSh);
+    R(12, hy + 5, 1, 2, c.skin); // nose
+    R(3, hy, 8, 4, c.hair); R(4, hy, 7, 1, c.hairHi); R(3, hy + 4, 5, 5, c.hair); R(3, hy + 8, 5, 1, c.hairLo);
+    R(10, hy + 3, 2, 1, c.hair); R(8, hy + 4, 1, 3, c.hairLo); // fringe + ear shadow
+    R(8, hy + 5, 1, 2, c.skinSh); // ear
+    p.r(X(10), hy + 5, 1, 2, c.eye); p.p(X(11), hy + 5, '#f4f0ea');
+    if (girl) {
+      p.p(X(10), hy + 4, c.eye);
+      R(2, hy + 5, 3, 8, c.hair); R(3, hy + 5, 1, 8, c.hairHi); R(2, hy + 12, 3, 1, c.hairLo);
+      R(7, hy + 1, 2, 2, c.accent!);
+    }
+    R(11, hy + 7, 1, 1, '#a85e58');
   }
 }
 
