@@ -157,7 +157,7 @@ export class UI {
     el.style.opacity = '0';
   }
   red(intensity: number) {
-    this.redEl.style.opacity = String(Math.max(0, Math.min(0.6, intensity)));
+    this.redEl.style.opacity = String(Math.max(0, Math.min(1, intensity)));
   }
 
   // ---------------- dialog ----------------
@@ -226,7 +226,7 @@ export class UI {
         return b;
       });
       const pick = (i: number) => {
-        if (performance.now() - opened < 150) return;
+        if (performance.now() - opened < 350) return;
         layer.remove();
         this.popModal(key);
         Sound.sfx(i === cancelIndex || i < 0 ? 'cancel' : 'select');
@@ -285,12 +285,15 @@ export class UI {
       const foot = h('div', 'foot', menu);
       h('span', '', foot, `プレイ時間 ${ctx.playTime}`);
       const closeBtn = h('button', 'btn', foot, '閉じる [Esc]');
-      closeBtn.addEventListener('click', () => close());
+      closeBtn.addEventListener('click', () => { if (!fresh()) close(); });
       const names = ['持ち物', 'メモ', '目的', '設定'];
       let cur = 0;
+      const openedAt = performance.now();
+      // ignore the synthetic click that follows the touch that opened the menu
+      const fresh = () => performance.now() - openedAt < 400;
       const tabBtns = names.map((n, i) => {
         const b = h('button', '', tabs, n);
-        b.addEventListener('click', () => { show(i); Sound.sfx('cursor'); });
+        b.addEventListener('click', () => { if (fresh()) return; show(i); Sound.sfx('cursor'); });
         return b;
       });
       const listDetail = (entries: { label: string; icon?: string; detail: string }[], empty: string) => {

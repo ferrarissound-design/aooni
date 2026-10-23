@@ -108,6 +108,7 @@ export interface ObjDef {
   wall?: boolean; // hung on a wall face, not solid
   interact?: string;
   hide?: boolean;
+  opaque?: boolean; // blocks line of sight
   light?: { r: number; color?: number; flicker?: boolean; alpha?: number };
 }
 
@@ -177,12 +178,12 @@ export const OBJECTS: ObjDef[] = [
   { id: 'lib_shelf5', tex: 'bookshelf', x: 12, y: 16, interact: 'bookshelf' },
   { id: 'lib_shelf6', tex: 'bookshelf', x: 13, y: 16, interact: 'bookshelf' },
   { id: 'lib_shelf7', tex: 'bookshelf', x: 14, y: 16, interact: 'bookshelf' },
-  { id: 'lib_mid1', tex: 'shelf_mid', x: 2, y: 19, h: 2, interact: 'bookshelf' },
-  { id: 'lib_mid2', tex: 'shelf_mid', x: 3, y: 19, h: 2, interact: 'bookshelf' },
-  { id: 'lib_mid3', tex: 'shelf_mid', x: 4, y: 19, h: 2, interact: 'bookshelf' },
-  { id: 'lib_mid4', tex: 'shelf_mid', x: 10, y: 19, h: 2, interact: 'bookshelf' },
-  { id: 'lib_mid5', tex: 'shelf_mid', x: 11, y: 19, h: 2, interact: 'bookshelf' },
-  { id: 'lib_mid6', tex: 'shelf_mid', x: 12, y: 19, h: 2, interact: 'bookshelf' },
+  { id: 'lib_mid1', tex: 'shelf_mid', x: 2, y: 19, h: 2, interact: 'bookshelf', opaque: true },
+  { id: 'lib_mid2', tex: 'shelf_mid', x: 3, y: 19, h: 2, interact: 'bookshelf', opaque: true },
+  { id: 'lib_mid3', tex: 'shelf_mid', x: 4, y: 19, h: 2, interact: 'bookshelf', opaque: true },
+  { id: 'lib_mid4', tex: 'shelf_mid', x: 10, y: 19, h: 2, interact: 'bookshelf', opaque: true },
+  { id: 'lib_mid5', tex: 'shelf_mid', x: 11, y: 19, h: 2, interact: 'bookshelf', opaque: true },
+  { id: 'lib_mid6', tex: 'shelf_mid', x: 12, y: 19, h: 2, interact: 'bookshelf', opaque: true },
   { id: 'lib_desk', tex: 'desk', x: 2, y: 23, w: 2, interact: 'clipping' },
   { id: 'lib_chair', tex: 'chair_back', x: 2, y: 24, solid: false, decal: true },
   { id: 'lib_cabinet', tex: 'cabinet', x: 13, y: 23, interact: 'lib_cabinet', hide: true },
@@ -278,16 +279,17 @@ export const OBJECTS: ObjDef[] = [
   // ---------- 地下室 ----------
   { id: 'base_stairs', tex: 'stairs_up', x: 18, y: 46, w: 3, h: 3, decal: true },
   { id: 'save_base', tex: 'save_desk', x: 23, y: 48, interact: 'save', light: { r: 40, color: 0xffb060, flicker: true } },
-  { id: 'pillar1', tex: 'pillar', x: 22, y: 51, h: 2 },
-  { id: 'pillar2', tex: 'pillar', x: 28, y: 51, h: 2 },
-  { id: 'pillar3', tex: 'pillar', x: 34, y: 51, h: 2 },
-  { id: 'pillar4', tex: 'pillar', x: 40, y: 51, h: 2 },
-  { id: 'pillar5', tex: 'pillar', x: 22, y: 55, h: 2 },
-  { id: 'pillar6', tex: 'pillar', x: 28, y: 55, h: 2 },
-  { id: 'pillar7', tex: 'pillar', x: 34, y: 55, h: 2 },
-  { id: 'pillar8', tex: 'pillar', x: 40, y: 55, h: 2 },
+  { id: 'pillar1', tex: 'pillar', x: 22, y: 51, h: 2, opaque: true },
+  { id: 'pillar2', tex: 'pillar', x: 28, y: 51, h: 2, opaque: true },
+  { id: 'pillar3', tex: 'pillar', x: 34, y: 51, h: 2, opaque: true },
+  { id: 'pillar4', tex: 'pillar', x: 40, y: 51, h: 2, opaque: true },
+  { id: 'pillar5', tex: 'pillar', x: 22, y: 55, h: 2, opaque: true },
+  { id: 'pillar6', tex: 'pillar', x: 28, y: 55, h: 2, opaque: true },
+  { id: 'pillar7', tex: 'pillar', x: 34, y: 55, h: 2, opaque: true },
+  { id: 'pillar8', tex: 'pillar', x: 40, y: 55, h: 2, opaque: true },
   { id: 'breaker', tex: 'breaker', x: 44, y: 47, wall: true, interact: 'breaker' },
   { id: 'locker', tex: 'locker', x: 31, y: 48, interact: 'locker', hide: true },
+  { id: 'locker2', tex: 'locker', x: 45, y: 56, interact: 'locker', hide: true },
   { id: 'b_barrel1', tex: 'barrel', x: 16, y: 59 },
   { id: 'b_barrel2', tex: 'barrel', x: 17, y: 59 },
   { id: 'b_barrel3', tex: 'barrel', x: 47, y: 48 },

@@ -185,14 +185,15 @@ button.opt:disabled { opacity: 0.35; }
 .gameover .inner { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; opacity: 0; transition: opacity 1.2s; }
 .gameover .inner.show { opacity: 1; }
 .gameover h2 { font-size: clamp(34px, 7vw, 64px); font-weight: normal; letter-spacing: 0.3em; color: #b02a30; margin: 0 0 20px; text-shadow: 0 0 20px #600; }
-.ending { background: #000; overflow: hidden; }
+.ending { background: #000; overflow-y: auto; justify-content: flex-start; padding: 40px 0; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.ending .scroll { margin: auto 0; }
 .ending .scroll { position: relative; text-align: center; line-height: 2.2; font-size: 17px; white-space: pre-wrap; max-width: 640px; padding: 20px; opacity: 0; transition: opacity 2s; }
 .ending .scroll.show { opacity: 1; }
 .ending h2 { font-weight: normal; letter-spacing: 0.4em; color: var(--gold); }
 .fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 .fade.on { opacity: 1; }
 .flash { position: absolute; inset: 0; background: #c8d4ff; opacity: 0; pointer-events: none; }
-.redflash { position: absolute; inset: 0; background: #600; opacity: 0; pointer-events: none; mix-blend-mode: multiply; }
+.redflash { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(120,0,0,0) 40%, rgba(130,0,0,0.55) 80%, rgba(90,0,0,0.9) 100%); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .objective { position: absolute; left: calc(14px + var(--sal)); top: calc(12px + var(--sat)); font-size: 13px; color: var(--dim); max-width: 50vw; text-shadow: 0 0 4px #000; opacity: 0; transition: opacity 1s; pointer-events: none; }
 .objective.show { opacity: 0.85; }
 .rotate-hint { position: absolute; left: 0; right: 0; bottom: calc(150px + var(--sab)); text-align: center; color: var(--dim); font-size: 12px; pointer-events: none; }

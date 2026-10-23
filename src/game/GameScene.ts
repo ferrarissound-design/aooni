@@ -85,6 +85,8 @@ export class GameScene extends Phaser.Scene implements G {
   private lastSaveToast = 0;
   /** test hooks: time multiplier and a simple autopilot that drives the real input path */
   timeScale = 1;
+  private actQueued = false;
+  private menuQueued = false;
   autopilot: { pts: { x: number; y: number }[]; i: number; dash: boolean } | null = null;
 
   constructor() {
@@ -177,7 +179,18 @@ export class GameScene extends Phaser.Scene implements G {
     cam.setBackgroundColor('#000');
     this.applyZoom();
     this.scale.on('resize', this.onResize, this);
+    // action keys are queued from DOM events so very short taps are never lost
+    const onKey = (e: KeyboardEvent) => {
+      // the same keypress may have just closed a dialog/menu; don't reuse it
+      if (e.repeat || this.ui.blocking || performance.now() - this.ui.lastClose < 60) return;
+      if (['e', 'E', 'Enter', ' ', 'z', 'Z'].includes(e.key)) this.actQueued = true;
+      else if (e.key === 'Escape' || e.key === 'Tab') { this.menuQueued = true; e.preventDefault(); }
+    };
+    window.addEventListener('keydown', onKey);
+    this.actQueued = false;
+    this.menuQueued = false;
     this.events.once('shutdown', () => {
+      window.removeEventListener('keydown', onKey);
       this.scale.off('resize', this.onResize, this);
       Sound.setChase(false);
       this.ui.red(0);
@@ -189,7 +202,7 @@ export class GameScene extends Phaser.Scene implements G {
     this.keys = kb.addKeys({
       up: 'W', down: 'S', left: 'A', right: 'D',
       up2: 'UP', down2: 'DOWN', left2: 'LEFT', right2: 'RIGHT',
-      dash: 'SHIFT', act: 'E', act2: 'ENTER', act3: 'SPACE', act4: 'Z', menu: 'ESC', menu2: 'TAB',
+      dash: 'SHIFT',
     }) as Record<string, Phaser.Input.Keyboard.Key>;
 
     this.director = new Director(this);
@@ -454,6 +467,7 @@ export class GameScene extends Phaser.Scene implements G {
   }
 
   teleportPlayer(tx: number, ty: number, dir: Dir) {
+    if (this.player.hidden) this.unhide();
     this.player.setTile(tx, ty);
     this.player.face(dir);
     this.cameras.main.centerOn(this.player.x, this.player.y);
@@ -470,7 +484,8 @@ export class GameScene extends Phaser.Scene implements G {
     const inCut = this.cutsceneDepth > 0;
     const blocked = ui.blocking;
 
-    const menuPressed = Phaser.Input.Keyboard.JustDown(this.keys.menu) || Phaser.Input.Keyboard.JustDown(this.keys.menu2) || ui.consumeTouchMenu();
+    const menuPressed = this.menuQueued || ui.consumeTouchMenu();
+    this.menuQueued = false;
     if (menuPressed && !blocked && !inCut && !this.transiting && !this.busy) void this.openMenu();
 
     if (!blocked) {
@@ -483,8 +498,8 @@ export class GameScene extends Phaser.Scene implements G {
     if (canControl) this.updatePlayer(dt);
     else if (!this.transiting) { this.player.animate(false); this.player.dashing = false; }
 
-    const actPressed = Phaser.Input.Keyboard.JustDown(this.keys.act) || Phaser.Input.Keyboard.JustDown(this.keys.act2)
-      || Phaser.Input.Keyboard.JustDown(this.keys.act3) || Phaser.Input.Keyboard.JustDown(this.keys.act4) || ui.consumeTouchAct();
+    const actPressed = this.actQueued || ui.consumeTouchAct();
+    this.actQueued = false;
     this.target = canControl && !this.player.hidden ? this.findTarget() : null;
     if (actPressed && canControl && performance.now() - ui.lastClose > 220) this.doInteract();
 
@@ -553,6 +568,13 @@ export class GameScene extends Phaser.Scene implements G {
     if (Math.abs(v.x) > Math.abs(v.y)) p.dir = v.x > 0 ? 'right' : 'left';
     else p.dir = v.y > 0 ? 'down' : 'up';
     const m = p.move(this.grid, v.x * speed * dt, v.y * speed * dt, true);
+    if (p.dir === 'right' && Math.abs(m.mx) < 0.01 && this.state.items.includes('key_gate')) {
+      const gate = this.grid.doorAt(Math.floor((p.x + 10) / TILE), p.ty);
+      if (gate && gate.def.id === 'door_gate' && gate.locked && !this.busy) {
+        this.busy = true;
+        void story.interactDoor(this, gate).finally(() => { this.busy = false; });
+      }
+    }
     const dist = Math.hypot(m.mx, m.my);
     p.animate(dist > 0.05, dash ? 1.7 : 1);
     this.stepAcc += dist;
@@ -657,6 +679,7 @@ export class GameScene extends Phaser.Scene implements G {
 
   private async transit(dest: [number, number], id: string) {
     this.transiting = true;
+    this.autopilot = null;
     this.player.animate(false);
     Sound.step('wood', 0.8);
     await this.ui.fade(true, 220);
@@ -729,7 +752,7 @@ export class GameScene extends Phaser.Scene implements G {
       void story.endingScene(this);
       return;
     }
-    if (this.pendingEvents.has('first_escape') && !this.monster.present) {
+    if (this.pendingEvents.has('first_escape') && !this.monster.present && !this.player.hidden) {
       this.pendingEvents.delete('first_escape');
       this.busy = true;
       void story.afterFirstEscape(this).finally(() => { this.busy = false; });
@@ -814,7 +837,7 @@ export class GameScene extends Phaser.Scene implements G {
       this.chaseOffT -= dt;
       if (this.chaseOffT <= 0) { this.chaseOn = false; Sound.setChase(false); }
     }
-    this.ui.red(chasing ? 0.12 + prox * 0.25 : 0);
+    this.ui.red(chasing ? 0.35 + prox * 0.55 : 0);
   }
 
   // ---------------------------------------------------------------- lighting

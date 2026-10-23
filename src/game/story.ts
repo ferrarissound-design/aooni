@@ -409,7 +409,7 @@ async function altar(g: G) {
     await say(g, sys('ゴゴゴゴゴ……！\n東の壁が崩れ落ち、地下室へ続く穴が開いた！'));
     g.sfx('door_slam', { vol: 0.7, pan: -0.3 });
     await g.wait(500);
-    g.spawnMonster(7, 49, 'stare', { stare: 1.7, then: 'chase', relentless: true });
+    g.spawnMonster(7, 49, 'stare', { stare: 2.0, then: 'chase', relentless: true });
     g.sfx('sting');
     g.shake(400, 0.008);
     f.final_chase = true;
@@ -565,11 +565,13 @@ export async function basementArrival(g: G) {
 export async function basementAmbush(g: G) {
   await cutscene(g, async () => {
     g.sfx('door_slam', { vol: 0.6, pan: -0.6 });
-    await g.wait(500);
-    g.spawnMonster(19, 50, 'stare', { stare: 1.6, then: 'chase' });
-    g.sfx('sting');
+    await g.wait(600);
+    // it comes down the stairs and heads for where it heard us, not straight at us
+    g.spawnMonster(19, 50, 'stare', { stare: 1.4, then: 'alert' });
+    g.monster.noiseTarget = { x: g.player.x, y: g.player.y };
+    g.sfx('sting', { vol: 0.6 });
     g.shake(300, 0.006);
-    await say(g, me('……！ 階段から、あいつが……！'));
+    await say(g, me('……！ 階段の方から、何かが降りてくる……！'), sys('見つかる前に隠れるか、柱の陰を伝って逃げよう。'));
   });
 }
 

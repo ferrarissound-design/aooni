@@ -281,6 +281,12 @@ export class Monster extends Actor {
           if (this.stareThen === 'chase') this.world.monsterEvent('spotted');
           this.setState(this.stareThen);
           if (this.stareThen === 'chase') this.lastSeen = { x: p.x, y: p.y, t: this.world.time };
+          if (this.stareThen === 'alert') {
+            const t = this.noiseTarget ?? { x: p.x, y: p.y };
+            this.lastSeen = { x: t.x, y: t.y, t: this.world.time };
+            this.setGoal(Math.floor(t.x / TILE), Math.floor(t.y / TILE));
+          }
+          if (this.stareThen === 'wander') this.pickWanderGoal();
         }
         break;
       }

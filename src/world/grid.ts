@@ -58,6 +58,7 @@ export class Grid {
   tiles = new Uint8Array(MAP_W * MAP_H);
   room = new Int16Array(MAP_W * MAP_H).fill(-1);
   objSolid = new Uint8Array(MAP_W * MAP_H);
+  sightSolid = new Uint8Array(MAP_W * MAP_H);
   doorIdx = new Int16Array(MAP_W * MAP_H).fill(-1);
   portalIdx = new Int16Array(MAP_W * MAP_H).fill(-1);
   breakIdx = new Int16Array(MAP_W * MAP_H).fill(-1);
@@ -96,7 +97,10 @@ export class Grid {
     for (const o of OBJECTS) {
       if (o.decal || o.wall || o.solid === false) continue;
       const w = o.w ?? 1, h = o.h ?? 1;
-      for (let y = o.y; y < o.y + h; y++) for (let x = o.x; x < o.x + w; x++) this.objSolid[this.i(x, y)] = 1;
+      for (let y = o.y; y < o.y + h; y++) for (let x = o.x; x < o.x + w; x++) {
+        this.objSolid[this.i(x, y)] = 1;
+        if (o.opaque) this.sightSolid[this.i(x, y)] = 1;
+      }
     }
   }
 
@@ -149,6 +153,7 @@ export class Grid {
     const k = this.i(tx, ty);
     const di = this.doorIdx[k];
     if (di >= 0) return !this.doors[di].open;
+    if (this.sightSolid[k]) return true;
     return this.isWallish(tx, ty);
   }
 

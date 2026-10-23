@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4173",
-    "test:e2e": "node tests/playtest.mjs"
+    "test:e2e": "node tests/playtest.mjs",
+    "test:mobile": "node tests/mobile.mjs"
   },
   "dependencies": {
     "phaser": "3.80.1"
