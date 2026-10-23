@@ -9,6 +9,9 @@
 
 ## 遊び方
 
+`npm run build` のあとは、`dist/index.html` をダブルクリックして直接開いても動きます（サーバー不要）。
+公開する場合は `dist/` の中身をそのまま静的ホスティングに置いてください。リポジトリ直下の `index.html`（ソース）をそのまま配信しても動きません（TypeScriptがブラウザで実行できず、画面が真っ白になります）。
+
 ```bash
 npm install
 npm run dev      # 開発サーバ

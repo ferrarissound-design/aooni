@@ -74,6 +74,14 @@ async function hold(key, ms) {
   await page.keyboard.up(key);
 }
 
+/** Holds a key until `cond` (a page expression) is true, so slow frames don't make the test flaky. */
+async function holdUntil(key, cond, maxMs = 6000) {
+  await page.keyboard.down(key);
+  const t0 = Date.now();
+  while (Date.now() - t0 < maxMs && !(await G(cond))) await sleep(60);
+  await page.keyboard.up(key);
+}
+
 async function autopilotTo(tx, ty, dash = false, timeout = 30000) {
   await ev(([tx, ty, dash]) => {
     const g = window.__game;
@@ -136,11 +144,11 @@ try {
   check('wall collision stops the player', wallOk, `x=${Math.round(await G('g.player.x'))}`);
   // walk through a door with the keyboard (hall -> south corridor)
   await tp(22, 33, 'up');
-  await hold('ArrowUp', 1500);
+  await holdUntil('ArrowUp', '(g.grid.roomAt(g.player.tx, g.player.ty) || {}).id === "corS"');
   check('walks through a door into the corridor', (await room()) === 'corS', await room());
   // corner assist: slightly off-centre still enters the doorway
   await ev(() => { const g = window.__game; g.teleportPlayer(22, 33, 'up'); g.player.setPos(g.player.x + 5, g.player.y); });
-  await hold('ArrowUp', 1500);
+  await holdUntil('ArrowUp', '(g.grid.roomAt(g.player.tx, g.player.ty) || {}).id === "corS"');
   check('corner assist slides into doorway', (await room()) === 'corS', await room());
 
   // ------------------------------------------------------------ items
